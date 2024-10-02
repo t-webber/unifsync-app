@@ -18,8 +18,22 @@ const app = createApp(App);
 // Add icons
 
 import { OhVueIcon, addIcons } from "oh-vue-icons";
-import { HiMenu } from "oh-vue-icons/icons";
-addIcons(HiMenu);
+import {
+    HiMenu,
+    LaSyncAltSolid,
+    IoSettingsSharp,
+    BiChevronDown,
+    BiChevronUp,
+    BiHouseDoor,
+} from "oh-vue-icons/icons";
+addIcons(
+    HiMenu,
+    LaSyncAltSolid,
+    IoSettingsSharp,
+    BiChevronDown,
+    BiChevronUp,
+    BiHouseDoor
+);
 app.component("v-icon", OhVueIcon);
 
 // Add router
