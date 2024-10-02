@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 
 const store = reactive({
     activated: true,
 });
+const name = ref("unknown");
+async function setName() {
+    name.value = await window.__TAURI__.core.invoke("greet", { name: "Bob" });
+}
 </script>
 
 <template>
@@ -22,10 +26,10 @@ const store = reactive({
             </div>
         </div>
         <div>
-            <div>
-                <div v-if="store.activated">Edit</div>
-                <div v-else>Save</div>
-            </div>
+            <div v-if="store.activated">Edit</div>
+            <div v-else>Save</div>
+            <button @click="setName">Set name</button>
+            <div>{{ name }}</div>
         </div>
     </div>
 </template>
