@@ -1,28 +1,29 @@
 {
-  "name": "unifsync-app",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "tauri": "tauri"
-  },
-  "dependencies": {
-    "@tauri-apps/api": ">=2.0.0-rc.0",
-    "@tauri-apps/plugin-shell": ">=2.0.0-rc.0",
-    "autoprefixer": "^10.4.20",
-    "oh-vue-icons": "^1.0.0-rc3",
-    "postcss": "^8.4.47",
-    "vue": "^3.3.4"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": ">=2.0.0-rc.0",
-    "@vitejs/plugin-vue": "^5.0.5",
-    "tailwindcss": "^3.4.13",
-    "typescript": "^5.2.2",
-    "vite": "^5.3.1",
-    "vue-tsc": "^2.0.22"
-  }
+    "name": "unifsync-app",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc --noEmit && vite build",
+        "preview": "vite preview",
+        "tauri": "tauri",
+        "fmt": "npx prettier --write ."
+    },
+    "dependencies": {
+        "@tauri-apps/api": ">=2.0.0-rc.0",
+        "@tauri-apps/plugin-shell": ">=2.0.0-rc.0",
+        "autoprefixer": "^10.4.20",
+        "oh-vue-icons": "^1.0.0-rc3",
+        "postcss": "^8.4.47",
+        "vue": "^3.3.4"
+    },
+    "devDependencies": {
+        "@tauri-apps/cli": ">=2.0.0-rc.0",
+        "@vitejs/plugin-vue": "^5.0.5",
+        "tailwindcss": "^3.4.13",
+        "typescript": "^5.2.2",
+        "vite": "^5.3.1",
+        "vue-tsc": "^2.0.22"
+    }
 }
