@@ -11,8 +11,8 @@ declare global {
 // Create App from vue files
 
 import { createApp } from "vue";
-import App from "./App.vue";
-import "./main.css";
+import App from "./pages/App.vue";
+import "./assets/index.css";
 const app = createApp(App);
 
 // Add icons
@@ -26,8 +26,8 @@ app.component("v-icon", OhVueIcon);
 
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import Home from "./home.vue";
-import Note from "./note.vue";
+import Home from "./pages/home.vue";
+import Note from "./pages/note.vue";
 
 const routes = [
     { path: "/", component: Home },
