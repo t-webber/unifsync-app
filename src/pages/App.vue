@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
+import { Separator } from "@/components/ui/separator";
 
 const store = reactive({
     activated: true,
@@ -28,10 +29,13 @@ initNotes()
             <button @click="store.activated = !store.activated" class="w-full">
                 <v-icon name="hi-menu" />
             </button>
-            <nav v-if="store.activated && !store.loading">
+            <nav v-if="store.activated && !store.loading" class="space-y-4">
                 <ul>
-                    <li></li>
+                    <li>
+                        <RouterLink to="/">Home</RouterLink>
+                    </li>
                 </ul>
+                <Separator class="w-full h-2 bg-background" />
                 <ul>
                     <li v-for="note in notes">
                         <RouterLink :to="'/note/' + note.id">{{
