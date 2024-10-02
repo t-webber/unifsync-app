@@ -5,10 +5,6 @@ const store = reactive({
     activated: true,
     loading: true,
 });
-const name = ref("unknown");
-async function setName() {
-    name.value = await window.__TAURI__.core.invoke("greet", { name: "Bob" });
-}
 
 interface Note {
     id: number;
@@ -28,27 +24,28 @@ initNotes()
 
 <template>
     <div class="flex h-screen">
-        <div class="p-4 bg-muted space-y-4 h-full">
+        <header class="p-4 bg-muted space-y-4 h-full">
             <button @click="store.activated = !store.activated" class="w-full">
                 <v-icon name="hi-menu" />
             </button>
-            <div v-if="store.activated && !store.loading">
+            <nav v-if="store.activated && !store.loading">
+                <ul>
+                    <li></li>
+                </ul>
                 <ul>
                     <li v-for="note in notes">
-                        <a>{{ note.title }}</a>
+                        <RouterLink :to="'/note/' + note.id">{{
+                            note.title
+                        }}</RouterLink>
                         <p>{{ note.content }}</p>
                     </li>
                 </ul>
-            </div>
+            </nav>
             <div v-else-if="store.activated">Loading</div>
-        </div>
-        <div>
-            <div v-if="store.activated">Edit</div>
-            <div v-else>Save</div>
-            <button @click="setName">Set name</button>
-            <div>{{ name }}</div>
-        </div>
+        </header>
+        <main class="p-4">
+            <p><strong>Current route path:</strong> {{ $route.fullPath }}</p>
+            <RouterView />
+        </main>
     </div>
 </template>
-
-<style scoped></style>
