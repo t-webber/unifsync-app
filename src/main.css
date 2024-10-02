@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    --bg: black;
+    --primary: #ffdb3d;
+    --muted: #222;
+    --fg: white;
+
+    background: var(--bg);
+    color: var(--fg);
+}
