@@ -1,18 +1,10 @@
-declare global {
-    interface Window {
-        __TAURI__: {
-            core: {
-                invoke: (cmd: string, props?: object) => any;
-            };
-        };
-    }
-}
+import "./assets/index.css";
+import "./types";
 
 // Create App from vue files
 
 import { createApp } from "vue";
 import App from "./pages/App.vue";
-import "./assets/index.css";
 const app = createApp(App);
 
 // Add icons
@@ -45,7 +37,10 @@ import Note from "./pages/note.vue";
 
 const routes = [
     { path: "/", component: Home },
-    { path: "/note/:id", component: Note },
+    {
+        path: "/note/:id",
+        component: Note,
+    },
 ];
 
 const router = createRouter({
