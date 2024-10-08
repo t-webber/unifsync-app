@@ -7,8 +7,8 @@ async function setName() {
 </script>
 
 <template>
-    <h2 class="p-2">Home</h2>
-    <button @click="setName">Set name</button>
+    <h2>Home</h2>
+    <button class="w-fit" @click="setName">Set name</button>
     <div>{{ name }}</div>
 </template>
 

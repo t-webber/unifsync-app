@@ -1,9 +1,21 @@
 <script setup lang="ts">
+defineProps({
+    id: Number,
+    title: String,
+    content: String,
+});
+
 import { reactive, ref } from "vue";
 
 const state = reactive({
     loading: true,
 });
+
+interface Note {
+    id: number;
+    title: string;
+    content: string;
+}
 
 const notes = ref<Note[]>([]);
 async function initNotes() {
@@ -16,8 +28,8 @@ initNotes()
 </script>
 
 <template>
-    <div>
-        <!-- The current route is accessible as $route in the template -->
-        User {{ $route.params.id }}
-    </div>
+    <h2>{{ title }}</h2>
+    <p>
+        {{ content }}
+    </p>
 </template>
