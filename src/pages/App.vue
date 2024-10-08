@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Note from "./note.vue";
 import Home from "./home.vue";
 import { NoteProps } from "@/types";
+import { getNotes } from "@/tauri";
 
 const nav: {
     open: boolean;
@@ -20,7 +21,7 @@ const nav: {
 
 const notes = ref<NoteProps[]>([]);
 async function initNotes() {
-    notes.value = await window.__TAURI__.core.invoke("get_notes");
+    notes.value = await getNotes();
 }
 
 initNotes()
@@ -105,7 +106,7 @@ initNotes()
                 </div>
             </nav>
         </header>
-        <main class="p-4">
+        <main class="p-4 w-full">
             <h1 class="p-4">UnifSync</h1>
             <div v-if="nav.loading">
                 <p>Loading</p>
@@ -123,6 +124,7 @@ initNotes()
                     <div class="flex flex-col space-y-4 p-4">
                         <component
                             :is="Note"
+                            :id="notes[nav.noteNb].id"
                             :title="notes[nav.noteNb].title"
                             :content="notes[nav.noteNb].content"
                         />

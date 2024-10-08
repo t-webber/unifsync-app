@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { greet } from "@/tauri";
 import { ref } from "vue";
 const name = ref("unknown");
 async function setName() {
-    name.value = await window.__TAURI__.core.invoke("greet", { name: "Bob" });
+    name.value = await greet("Bob");
 }
 </script>
 

@@ -1,35 +1,26 @@
 <script setup lang="ts">
-defineProps({
+const props = defineProps({
     id: Number,
     title: String,
     content: String,
 });
 
-import { reactive, ref } from "vue";
+import { updateNoteContent } from "@/tauri";
 
-const state = reactive({
-    loading: true,
-});
-
-interface Note {
-    id: number;
-    title: string;
-    content: string;
+function onchange(key: any) {
+    updateNoteContent(props.id!, key.target.value);
+    console.log("Hello world", key.target.value);
+    key.target.style.height = "1px";
+    key.target.style.height = 25 + key.target.scrollHeight + "px";
 }
-
-const notes = ref<Note[]>([]);
-async function initNotes() {
-    notes.value = await window.__TAURI__.core.invoke("get_notes");
-}
-
-initNotes()
-    .then(() => (state.loading = false))
-    .catch((err) => console.error("[initNotes] ", err));
 </script>
 
 <template>
     <h2>{{ title }}</h2>
-    <p>
-        {{ content }}
-    </p>
+    <textarea
+        :value="content"
+        class="w-full bg-transparent"
+        :onkeydown="onchange"
+        :onkeyup="onchange"
+    />
 </template>
