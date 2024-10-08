@@ -4,4 +4,4 @@ node_modules
 target
 gen
 capabilities
-*.lock*
+*lock*

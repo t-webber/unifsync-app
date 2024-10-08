@@ -9,3 +9,6 @@ gen/
 tauri.js
 config.json
 bundle.json
+
+rust-toolchain*
+.cargo/

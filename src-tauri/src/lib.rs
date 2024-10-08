@@ -1,34 +1,13 @@
+use std::fs;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-struct Note<T> {
+struct Note {
     id: u32,
-    title: T,
-    content: T,
+    title: String,
+    content: String,
 }
-
-const NOTES: [Note<&str>; 4] = [
-    Note {
-        id: 1,
-        title: "A first blog",
-        content: "Lorem ipsum dolor sit amet",
-    },
-    Note {
-        id: 2,
-        title: "A second blog",
-        content: "Lorem ipsum dolor sit amet",
-    },
-    Note {
-        id: 3,
-        title: "A third blog",
-        content: "Lorem ipsum dolor sit amet",
-    },
-    Note {
-        id: 4,
-        title: "A forth blog",
-        content: "Lorem ipsum dolor sit amet",
-    },
-];
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -36,9 +15,19 @@ fn greet(name: &str) -> String {
     println!("{res}");
     res
 }
+
+const NOTES_PATH: &str = "../data/notes.json";
+
 #[tauri::command]
-fn get_notes() -> [Note<&'static str>; 4] {
-    NOTES
+fn get_notes() -> Vec<Note> {
+    match fs::read_to_string(NOTES_PATH).map_err(|err| err.to_string()) {
+        Ok(content) => serde_json::from_str(&content)
+            .unwrap_or_else(|_| panic!("Failed to convert to Vec<Note>")),
+        Err(_) => {
+            fs::write(NOTES_PATH, "").unwrap_or_else(|_| panic!("Failed to create file"));
+            vec![]
+        }
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
