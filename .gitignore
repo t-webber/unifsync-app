@@ -20,5 +20,4 @@ bun.lockb
 *.sln
 *.sw?
 
-*.lock*
-*lock.*
+*lock*
