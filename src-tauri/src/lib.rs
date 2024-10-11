@@ -38,13 +38,16 @@ fn greet(name: &str) -> String {
     format!("Hello, {name}! You've been greeted from Rust!")
 }
 
+const NOTES_DIR: &str = "../data/";
 const NOTES_PATH: &str = "../data/notes.json";
 
 #[tauri::command]
 fn get_notes() -> Vec<Note> {
     fs::read_to_string(NOTES_PATH).map_or_else(
         |_| {
-            if let Err(err) = fs::write(NOTES_PATH, "") {
+            if let Err(err) =
+                fs::create_dir_all(NOTES_DIR).and_then(|()| fs::write(NOTES_PATH, "[]"))
+            {
                 eprintln!("Failed to create file: {err}");
             }
             vec![]
@@ -73,11 +76,11 @@ fn update_note_content(id: u32, content: String) {
         Some(note) => {
             note.content = content;
             match serde_json::to_string(&notes)
-                .map_err(|e| e.to_string())
+                .map_err(|er| er.to_string())
                 .and_then(|stringified| {
-                    fs::write(NOTES_PATH, stringified).map_err(|e| e.to_string())
+                    fs::write(NOTES_PATH, stringified).map_err(|er| er.to_string())
                 }) {
-                Ok(_) => (),
+                Ok(()) => (),
                 Err(err) => eprintln!("Failed to re-write notes: {err}"),
             }
         }
