@@ -9,82 +9,35 @@
     clippy::nursery,
     // clippy::cargo
 )]
-#![allow(
-    clippy::blanket_clippy_restriction_lints,
-    reason = "enforce restriction linting"
-)]
+#![allow(clippy::blanket_clippy_restriction_lints, reason = "use restriction")]
 #![allow(clippy::implicit_return, reason = "not necessary")]
 #![allow(clippy::single_call_fn, reason = "usefull to segment code")]
-#![allow(clippy::missing_docs_in_private_items, reason = "I am lazy")]
+#![allow(
+    clippy::missing_docs_in_private_items,
+    clippy::arithmetic_side_effects,
+    reason = "I am lazy"
+)]
 #![allow(clippy::question_mark_used, reason = "very usefull")]
 #![allow(clippy::mod_module_files, reason = "avoid fs complexity")]
 #![allow(clippy::print_stderr, reason = "debugging")]
-#![allow(clippy::allow_attributes_without_reason, reason = "tauri")]
+#![allow(
+    clippy::allow_attributes_without_reason,
+    clippy::pub_use,
+    reason = "tauri requires those"
+)]
 #![allow(clippy::allow_attributes, reason = "new feature still bugged")]
+#![allow(
+    clippy::module_name_repetitions,
+    reason = "conveniant to not `use` directly the functions"
+)]
 
-use std::fs;
+use notes::{create_note, get_notes, update_note};
 
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize)]
-struct Note {
-    id: u32,
-    title: String,
-    content: String,
-}
+mod notes;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {name}! You've been greeted from Rust!")
-}
-
-const NOTES_DIR: &str = "../data/";
-const NOTES_PATH: &str = "../data/notes.json";
-
-#[tauri::command]
-fn get_notes() -> Vec<Note> {
-    fs::read_to_string(NOTES_PATH).map_or_else(
-        |_| {
-            if let Err(err) =
-                fs::create_dir_all(NOTES_DIR).and_then(|()| fs::write(NOTES_PATH, "[]"))
-            {
-                eprintln!("Failed to create file: {err}");
-            }
-            vec![]
-        },
-        |content| match serde_json::from_str(&content) {
-            Ok(vec) => vec,
-            Err(err) => {
-                eprintln!("Failed to convert to Vec<Note>: {err}");
-                vec![]
-            }
-        },
-    )
-}
-
-#[tauri::command]
-fn update_note_content(id: u32, content: String) {
-    let mut notes: Vec<Note> = get_notes();
-    let mut index = None;
-    for (i, note) in notes.iter().enumerate() {
-        if note.id == id {
-            index = Some(i);
-        }
-    }
-    match index.and_then(|i| notes.get_mut(i)) {
-        None => eprintln!("Failed to find note with id {id}"),
-        Some(note) => {
-            note.content = content;
-            match serde_json::to_string(&notes)
-                .map_err(|er| er.to_string())
-                .and_then(|stringified| {
-                    fs::write(NOTES_PATH, stringified).map_err(|er| er.to_string())
-                }) {
-                Ok(()) => (),
-                Err(err) => eprintln!("Failed to re-write notes: {err}"),
-            }
-        }
-    }
 }
 
 #[allow(clippy::expect_used)]
@@ -98,7 +51,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             get_notes,
-            update_note_content
+            update_note,
+            create_note
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

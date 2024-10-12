@@ -1,26 +1,32 @@
 <script setup lang="ts">
-const props = defineProps({
-    id: Number,
-    title: String,
-    content: String,
+import { updateNote } from "@/tauri";
+import { NoteProps } from "@/types";
+import { reactive, watch } from "vue";
+
+const props = defineProps<{ note: NoteProps }>();
+
+const state = reactive({
+    title: props.note.title,
+    content: props.note.content,
 });
 
-import { updateNoteContent } from "@/tauri";
+watch(state, async () => {
+    console.log(state.title);
+    updateNote(props.note.id, state.title, state.content);
+});
 
-function onchange(key: any) {
-    updateNoteContent(props.id!, key.target.value);
-    console.log("Hello world", key.target.value);
-    key.target.style.height = "1px";
+function onChange(key: any) {
+    key.target.style.height = "0px";
     key.target.style.height = 25 + key.target.scrollHeight + "px";
 }
 </script>
 
 <template>
-    <h2>{{ title }}</h2>
+    <input v-model="state.title" class="w-full bg-transparent text-2xl" />
     <textarea
-        :value="content"
+        v-model="state.content"
         class="w-full bg-transparent"
-        :onkeydown="onchange"
-        :onkeyup="onchange"
-    />
+        :onkeydown="onChange"
+        :onkeyup="onChange"
+    ></textarea>
 </template>

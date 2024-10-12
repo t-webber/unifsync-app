@@ -11,9 +11,14 @@ export async function greet(name: string): Promise<string> {
     return invoke("greet", { name });
 }
 
-export async function updateNoteContent(
+export async function updateNote(
     id: number,
-    content: string
+    title: string,
+    content: string,
 ): Promise<void> {
-    return invoke("update_note_content", { id, content });
+    invoke("update_note", { id, title, content });
+}
+
+export async function createNote(): Promise<number> {
+    return invoke("create_note");
 }
