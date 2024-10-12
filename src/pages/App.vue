@@ -6,7 +6,7 @@ import Settings from "./settings.vue";
 import { reactive, ref } from "vue";
 
 import { NoteProps } from "@/types";
-import { getNotes } from "@/tauri";
+import { createNote, getNotes } from "@/tauri";
 
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,12 @@ function nav(href: Pages) {
     state.page = href;
 }
 
-function createNote() {}
+function newNote() {
+    createNote().then((id) => {
+        state.noteNb = id;
+        state.page = "edit";
+    });
+}
 
 initNotes()
     .then(() => (state.loading = false))
@@ -49,6 +54,10 @@ initNotes()
 <template>
     <div class="flex h-screen">
         <header class="bg-muted space-y-4 pt-4 h-full">
+            <h1 class="pt-4 w-full text-2xl text-center" v-if="state.open">
+                UnifSync
+            </h1>
+            <h1 class="pt-4 w-full text-2xl text-center" v-else>US</h1>
             <Button
                 variant="ghost"
                 @click="state.open = !state.open"
@@ -134,43 +143,24 @@ initNotes()
                     </div>
                 </div>
                 <Separator v-if="state.open" class="w-full h-1 bg-background" />
-                <Button @click="createNote()" variant="link" class="w-full">
+                <Button @click="newNote()" variant="link" class="w-full">
                     <div v-if="state.open">New note</div>
                     <div v-else><v-icon name="hi-plus-sm" /></div>
                 </Button>
             </nav>
         </header>
         <main class="p-4 w-full">
-            <h1 class="p-4">UnifSync</h1>
             <div v-if="state.loading">
                 <p>Loading</p>
-                >
             </div>
             <div v-else-if="state.page == 'settings'">
-                <router-view v-solt="{ Settings }">
-                    <div class="flex flex-col space-y-4 p-4">
-                        <component :is="Settings" />
-                    </div>
-                </router-view>
+                <Settings />
             </div>
             <div v-else-if="state.noteNb === null">
-                <router-view v-solt="{ Home }">
-                    <div class="flex flex-col space-y-4 p-4">
-                        <component :is="Home" />
-                    </div>
-                </router-view>
+                <Home />
             </div>
             <div v-else>
-                <router-view v-solt="{ Note }">
-                    <div class="flex flex-col space-y-4 p-4">
-                        <component
-                            :is="Note"
-                            :id="notes[state.noteNb].id"
-                            :title="notes[state.noteNb].title"
-                            :content="notes[state.noteNb].content"
-                        />
-                    </div>
-                </router-view>
+                <Note :note="notes[state.noteNb]" />
             </div>
         </main>
     </div>

@@ -11,4 +11,4 @@ config.json
 bundle.json
 
 rust-toolchain*
-.cargo/
+.*/

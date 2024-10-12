@@ -26,7 +26,7 @@ addIcons(
     BiChevronDown,
     HiPlusSm,
     BiChevronUp,
-    BiHouseDoor
+    BiHouseDoor,
 );
 app.component("v-icon", OhVueIcon);
 
