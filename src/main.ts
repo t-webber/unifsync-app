@@ -16,6 +16,7 @@ import {
     IoSettingsSharp,
     BiChevronDown,
     BiChevronUp,
+    HiPlusSm,
     BiHouseDoor,
 } from "oh-vue-icons/icons";
 addIcons(
@@ -23,32 +24,11 @@ addIcons(
     LaSyncAltSolid,
     IoSettingsSharp,
     BiChevronDown,
+    HiPlusSm,
     BiChevronUp,
     BiHouseDoor
 );
 app.component("v-icon", OhVueIcon);
-
-// Add router
-
-import { createMemoryHistory, createRouter } from "vue-router";
-
-import Home from "./pages/home.vue";
-import Note from "./pages/note.vue";
-
-const routes = [
-    { path: "/", component: Home },
-    {
-        path: "/note/:id",
-        component: Note,
-    },
-];
-
-const router = createRouter({
-    history: createMemoryHistory(),
-    routes,
-});
-
-app.use(router);
 
 // Mount the app on html
 
