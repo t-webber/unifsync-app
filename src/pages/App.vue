@@ -54,7 +54,7 @@ initNotes()
 <template>
     <div class="flex h-screen">
         <header class="bg-muted space-y-4 pt-4 h-full">
-            <h1 class="pt-4 w-full text-2xl text-center" v-if="state.open">
+            <h1 class="pt-4 px-4 w-full text-2xl text-center" v-if="state.open">
                 UnifSync
             </h1>
             <h1 class="pt-4 w-full text-2xl text-center" v-else>US</h1>
@@ -159,8 +159,13 @@ initNotes()
             <div v-else-if="state.noteNb === null">
                 <Home />
             </div>
-            <div v-else>
-                <Note :note="notes[state.noteNb]" />
+            <div v-else class="h-full">
+                <Note
+                    :note="notes[state.noteNb]"
+                    :nb="state.noteNb"
+                    :key="state.noteNb"
+                />
+                <!-- add key to force refresh when noteNb is changed -->
             </div>
         </main>
     </div>

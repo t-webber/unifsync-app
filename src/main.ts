@@ -17,6 +17,7 @@ import {
     BiChevronDown,
     BiChevronUp,
     HiPlusSm,
+    IoTrashBin,
     BiHouseDoor,
 } from "oh-vue-icons/icons";
 addIcons(
@@ -25,8 +26,9 @@ addIcons(
     IoSettingsSharp,
     BiChevronDown,
     HiPlusSm,
+    IoTrashBin,
     BiChevronUp,
-    BiHouseDoor,
+    BiHouseDoor
 );
 app.component("v-icon", OhVueIcon);
 

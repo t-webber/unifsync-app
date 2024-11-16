@@ -31,7 +31,7 @@
     reason = "conveniant to not `use` directly the functions"
 )]
 
-use notes::{create_note, get_notes, update_note};
+use notes::{create_note, delete_note, get_notes, update_note};
 
 mod notes;
 
@@ -52,7 +52,8 @@ pub fn run() {
             greet,
             get_notes,
             update_note,
-            create_note
+            create_note,
+            delete_note
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

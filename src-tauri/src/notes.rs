@@ -84,3 +84,13 @@ pub fn create_note() -> u32 {
     write_notes(&notes);
     new_id
 }
+
+#[tauri::command]
+pub fn delete_note(id: u32) {
+    write_notes(
+        &get_notes()
+            .into_iter()
+            .filter(|note| note.id != id)
+            .collect(),
+    );
+}
