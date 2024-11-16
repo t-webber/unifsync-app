@@ -3,7 +3,7 @@ import { updateNote, deleteNote } from "@/tauri";
 import { NoteProps } from "@/types";
 import { reactive, watch } from "vue";
 
-const props = defineProps<{ note: NoteProps }>();
+const props = defineProps<{ note: NoteProps; nb: number }>();
 
 const state = reactive({
     title: props.note.title,
@@ -17,8 +17,8 @@ watch(state, async () => {
 });
 
 function onChange(key: any) {
-    key.target.style.height = "0px";
-    key.target.style.height = 25 + key.target.scrollHeight + "px";
+    // key.target.style.height = "0px";
+    // key.target.style.height = 25 + key.target.scrollHeight + "px";
 }
 </script>
 
@@ -32,7 +32,7 @@ function onChange(key: any) {
     </div>
     <textarea
         v-model="state.content"
-        class="w-full bg-transparent"
+        class="w-full h-full bg-transparent focus:outline-none"
         :onkeydown="onChange"
         :onkeyup="onChange"
     ></textarea>
