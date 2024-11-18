@@ -3,7 +3,7 @@ use std::fs;
 use std::io::Write;
 
 #[cfg(feature = "logs")]
-use crate::notes::LOGS_PATH;
+use logs_lib::LOGS_PATH;
 
 macro_rules! eprint_other {
     ($name:ident) => {

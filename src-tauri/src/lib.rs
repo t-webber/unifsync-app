@@ -27,6 +27,7 @@
 
 use notes::{create_note, delete_note, get_notes, init_notes, update_note};
 
+extern crate logs_lib;
 mod errors;
 mod notes;
 

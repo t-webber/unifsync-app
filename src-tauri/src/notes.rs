@@ -1,6 +1,9 @@
 use std::{fs, path::Path};
 
 use crate::errors::Eprintln;
+#[cfg(feature = "logs")]
+use logs_lib::LOGS_PATH;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -22,9 +25,6 @@ impl Note {
 
 const DATA_DIR: &str = "../data/";
 const NOTES_PATH: &str = "../data/notes.json";
-
-#[cfg(feature = "logs")]
-pub const LOGS_PATH: &str = "../data/logs.json";
 
 #[tauri::command]
 pub fn get_notes() -> Vec<Note> {
