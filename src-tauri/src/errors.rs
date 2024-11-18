@@ -1,4 +1,9 @@
 use core::fmt::Debug as fDbg;
+use std::fs;
+use std::io::Write;
+
+#[cfg(feature = "logs")]
+use crate::notes::LOGS_PATH;
 
 macro_rules! eprint_other {
     ($name:ident) => {
@@ -19,6 +24,14 @@ impl<T, E: fDbg> Eprintln<T> for Result<T, E> {
     fn eprint(&self, msg: &str) {
         if let Err(ref err) = *self {
             eprintln!("{msg}: {err:?}");
+            #[cfg(feature = "logs")]
+            if let Err(er) = fs::OpenOptions::new()
+                .append(true)
+                .open(LOGS_PATH)
+                .and_then(|mut fd| writeln!(fd, "{msg}: {err:?}"))
+            {
+                eprint!("Failed to log errors ! ({er:?})");
+            }
         }
     }
 

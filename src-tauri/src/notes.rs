@@ -24,7 +24,7 @@ const DATA_DIR: &str = "../data/";
 const NOTES_PATH: &str = "../data/notes.json";
 
 #[cfg(feature = "logs")]
-const LOGS_PATH: &str = "../data/logs.json";
+pub const LOGS_PATH: &str = "../data/logs.json";
 
 #[tauri::command]
 pub fn get_notes() -> Vec<Note> {
@@ -94,5 +94,9 @@ pub fn init_notes() {
     }
     if !Path::new(NOTES_PATH).exists() {
         fs::write(NOTES_PATH, "").eprint("Failed to create data file");
+    }
+    #[cfg(feature = "logs")]
+    if !Path::new(LOGS_PATH).exists() {
+        fs::write(LOGS_PATH, "").eprint("Failed to create logs file");
     }
 }
