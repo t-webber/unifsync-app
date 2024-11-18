@@ -1,5 +1,6 @@
-use std::fs;
+use std::{fs, path::Path};
 
+use crate::errors::Eprintln;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -19,57 +20,48 @@ impl Note {
     }
 }
 
-const NOTES_DIR: &str = "../data/";
+const DATA_DIR: &str = "../data/";
 const NOTES_PATH: &str = "../data/notes.json";
+
+#[cfg(feature = "logs")]
+const LOGS_PATH: &str = "../data/logs.json";
 
 #[tauri::command]
 pub fn get_notes() -> Vec<Note> {
     fs::read_to_string(NOTES_PATH).map_or_else(
         |_| {
-            if let Err(err) =
-                fs::create_dir_all(NOTES_DIR).and_then(|()| fs::write(NOTES_PATH, "[]"))
-            {
-                eprintln!("Failed to create file: {err}");
-            }
+            fs::write(NOTES_PATH, "[]").eprint("Failed to create file");
             vec![]
         },
-        |content| match serde_json::from_str(&content) {
-            Ok(vec) => vec,
-            Err(err) => {
-                eprintln!("Failed to convert to Vec<Note>: {err}");
-                vec![]
-            }
+        |content| {
+            serde_json::from_str(&content).eprint_or("Failed to convert data to Vec<Note>", vec![])
         },
     )
 }
 
 fn write_notes(notes: &Vec<Note>) {
-    match serde_json::to_string(&notes)
+    serde_json::to_string(&notes)
         .map_err(|er| er.to_string())
         .and_then(|stringified| fs::write(NOTES_PATH, stringified).map_err(|er| er.to_string()))
-    {
-        Ok(()) => (),
-        Err(err) => eprintln!("Failed to re-write notes: {err}"),
-    }
+        .eprint("Failed to re-write notes");
 }
 
 #[tauri::command]
 pub fn update_note(id: u32, title: String, content: String) {
     let mut notes: Vec<Note> = get_notes();
-    let mut index = None;
-    for (i, note) in notes.iter().enumerate() {
-        if note.id == id {
-            index = Some(i);
+    let mut note = None;
+    for n in &mut notes {
+        if n.id == id {
+            note = Some(n);
+            break;
         }
     }
-    match index.and_then(|i| notes.get_mut(i)) {
-        None => eprintln!("Failed to find note with id {id}"),
-        Some(note) => {
-            note.title = title;
-            note.content = content;
-            write_notes(&notes);
-        }
-    }
+    note.eprint(&format!("Failted to find note with id {id}"));
+    if let Some(n) = note {
+        n.title = title;
+        n.content = content;
+        write_notes(&notes);
+    };
 }
 
 #[tauri::command]
@@ -93,4 +85,14 @@ pub fn delete_note(id: u32) {
             .filter(|note| note.id != id)
             .collect(),
     );
+}
+
+#[allow(clippy::create_dir)]
+pub fn init_notes() {
+    if !Path::new(DATA_DIR).exists() {
+        fs::create_dir(DATA_DIR).eprint("Failed to create data folder");
+    }
+    if !Path::new(NOTES_PATH).exists() {
+        fs::write(NOTES_PATH, "").eprint("Failed to create data file");
+    }
 }
