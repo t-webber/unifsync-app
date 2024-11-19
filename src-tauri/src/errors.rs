@@ -1,9 +1,6 @@
 use core::fmt::Debug as fDbg;
 use std::fs;
-use std::io::Write;
-
-#[cfg(feature = "logs")]
-pub const LOGS_PATH: &str = "../data/logs.json";
+use std::io::Write as _;
 
 macro_rules! eprint_other {
     ($name:ident) => {
@@ -14,9 +11,22 @@ macro_rules! eprint_other {
     };
 }
 
+#[cfg(feature = "logs")]
+pub const LOGS_PATH: &str = "../data/logs.txt";
+
 pub trait Eprintln<T> {
     fn eprint(&self, msg: &str);
     fn eprint_or(self, msg: &str, default: T) -> T;
+}
+
+impl<T> Eprintln<T> for Option<T> {
+    fn eprint(&self, msg: &str) {
+        if self.is_none() {
+            eprintln!("{msg}.");
+        }
+    }
+
+    eprint_other!(Some);
 }
 
 #[allow(clippy::use_debug)]
@@ -36,14 +46,4 @@ impl<T, E: fDbg> Eprintln<T> for Result<T, E> {
     }
 
     eprint_other!(Ok);
-}
-
-impl<T> Eprintln<T> for Option<T> {
-    fn eprint(&self, msg: &str) {
-        if self.is_none() {
-            eprintln!("{msg}.");
-        }
-    }
-
-    eprint_other!(Some);
 }

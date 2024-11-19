@@ -7,6 +7,8 @@ use crate::errors::LOGS_PATH;
 use logs::logger;
 use serde::{Deserialize, Serialize};
 
+use std::io::Write as _;
+
 const DATA_DIR: &str = "../data/";
 const NOTES_PATH: &str = "../data/notes.json";
 
@@ -28,6 +30,7 @@ impl Note {
 }
 
 #[tauri::command]
+#[logger]
 pub fn create_note() -> u32 {
     let mut notes = get_notes();
     let mut ids = notes.iter().map(|note| note.id);
@@ -41,6 +44,7 @@ pub fn create_note() -> u32 {
 }
 
 #[tauri::command]
+#[logger]
 pub fn delete_note(id: u32) {
     write_notes(
         &get_notes()
@@ -50,8 +54,8 @@ pub fn delete_note(id: u32) {
     );
 }
 
-// #[logger("get_notes", "glob")]
 #[tauri::command]
+#[logger]
 pub fn get_notes() -> Vec<Note> {
     fs::read_to_string(NOTES_PATH).map_or_else(
         |_| {
@@ -64,8 +68,9 @@ pub fn get_notes() -> Vec<Note> {
     )
 }
 
-#[allow(clippy::create_dir)]
+#[logger]
 pub fn init_notes() {
+    #[allow(clippy::create_dir)]
     if !Path::new(DATA_DIR).exists() {
         fs::create_dir(DATA_DIR).eprint("Failed to create data folder");
     }
@@ -73,12 +78,11 @@ pub fn init_notes() {
         fs::write(NOTES_PATH, "").eprint("Failed to create data file");
     }
     #[cfg(feature = "logs")]
-    if !Path::new(LOGS_PATH).exists() {
-        fs::write(LOGS_PATH, "").eprint("Failed to create logs file");
-    }
+    fs::write(LOGS_PATH, "").eprint("Failed to create logs file"); // always wipe logs
 }
 
 #[tauri::command]
+#[logger]
 pub fn update_note(id: u32, title: String, content: String) {
     let mut notes: Vec<Note> = get_notes();
     let mut note = None;

@@ -50,17 +50,16 @@ pub fn logger(_attr: TokenStream, func: TokenStream) -> TokenStream {
 
     quote!(
         #pub_tok #fn_tok #name(#args) #res_t {
-            println!("[{}] {}({}) -> {}", chrono::Local::now(), #name_str, #args_str, #res_str);
+            if let Err(er) = fs::OpenOptions::new()
+                    .append(true)
+                    .open(LOGS_PATH)
+                    .and_then(|mut fd| writeln!(fd, "[{}] {}({}) -> {}", chrono::Local::now(), #name_str, #args_str, #res_str))
+                {
+                    eprint!("Failed to log errors ! ({{er:?}})");
+                }
             #body
             }
 
     )
     .into()
-    // if let Err(er) = fs::OpenOptions::new()
-    //         .append(true)
-    //         .open(LOGS_PATH)
-    //         .and_then(|mut fd| writeln!(fd, "{{msg}}: {{err:?}}"))
-    //     {{
-    //         eprint!("Failed to log errors ! ({{er:?}})");
-    // code.parse().unwrap()
 }
