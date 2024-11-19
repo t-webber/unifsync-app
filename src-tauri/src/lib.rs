@@ -26,7 +26,7 @@
 #![allow(clippy::ref_patterns)]
 
 mod errors;
-extern crate logs_macros;
+extern crate logs;
 mod notes;
 
 use notes::{create_note, delete_note, get_notes, init_notes, update_note};

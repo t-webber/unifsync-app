@@ -1,24 +1,28 @@
-extern crate logs_defs;
+#![warn(
+    clippy::all,
+    clippy::pedantic,
+    clippy::style,
+    clippy::perf,
+    clippy::complexity,
+    clippy::correctness,
+    clippy::restriction,
+    clippy::nursery,
+    // clippy::cargo
+)]
+#![allow(clippy::blanket_clippy_restriction_lints)]
+#![allow(clippy::implicit_return)]
+#![allow(clippy::single_call_fn)]
+#![allow(clippy::missing_docs_in_private_items, clippy::arithmetic_side_effects)]
+#![allow(clippy::question_mark_used)]
+#![allow(clippy::mod_module_files)]
+#![allow(clippy::print_stderr)]
+#![allow(clippy::allow_attributes)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::ref_patterns)]
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse, DeriveInput, Ident, ItemFn};
-
-#[proc_macro_derive(Trait)]
-pub fn trait_derive(input: TokenStream) -> TokenStream {
-    let ast = parse::<DeriveInput>(input).unwrap();
-    let name = ast.ident;
-
-    let output = quote! {
-        impl Trait for #name {
-            fn helo() {
-                println!("blob");
-            }
-        }
-    };
-    output.into()
-}
-
+use syn::{parse, Ident, ItemFn};
 trait ParseIntoString {
     fn parse_into_string(&self) -> String;
 }

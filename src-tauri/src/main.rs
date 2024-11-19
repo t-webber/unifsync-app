@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    unifsync_app_lib::run()
+    unifsync_app_lib::run();
 }
