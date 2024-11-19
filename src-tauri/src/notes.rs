@@ -2,15 +2,16 @@ use std::{fs, path::Path};
 
 use crate::errors::Eprintln;
 #[cfg(feature = "logs")]
-use logs_lib::LOGS_PATH;
+use crate::errors::LOGS_PATH;
 
+use logs_macros::logger;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Note {
+    content: String,
     id: u32,
     title: String,
-    content: String,
 }
 
 impl Note {
@@ -26,6 +27,7 @@ impl Note {
 const DATA_DIR: &str = "../data/";
 const NOTES_PATH: &str = "../data/notes.json";
 
+// #[logger("get_notes", "glob")]
 #[tauri::command]
 pub fn get_notes() -> Vec<Note> {
     fs::read_to_string(NOTES_PATH).map_or_else(
@@ -39,6 +41,7 @@ pub fn get_notes() -> Vec<Note> {
     )
 }
 
+#[logger]
 fn write_notes(notes: &Vec<Note>) {
     serde_json::to_string(&notes)
         .map_err(|er| er.to_string())

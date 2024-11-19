@@ -25,11 +25,11 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::ref_patterns)]
 
-use notes::{create_note, delete_note, get_notes, init_notes, update_note};
-
-extern crate logs_lib;
 mod errors;
+extern crate logs_macros;
 mod notes;
+
+use notes::{create_note, delete_note, get_notes, init_notes, update_note};
 
 #[tauri::command]
 fn greet(name: &str) -> String {

@@ -1,0 +1,10 @@
+[package]
+name = "logs_defs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "logs_defs"
+path = "lib.rs"
+
+[dependencies]
