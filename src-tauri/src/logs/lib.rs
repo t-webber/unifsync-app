@@ -19,10 +19,16 @@
 #![allow(clippy::allow_attributes)]
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::ref_patterns)]
+//
+#![feature(if_let_guard)]
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse, Ident, ItemFn};
+use syn::{
+    parse, punctuated::Punctuated, token::Comma, FnArg, Ident, ItemFn, Pat, PatIdent, PatType,
+};
+
+#[allow(dead_code)]
 trait ParseIntoString {
     fn parse_into_string(&self) -> String;
 }
@@ -36,24 +42,24 @@ impl<T: ToTokens + Clone> ParseIntoString for T {
 
 struct ParseArgsState {
     name: bool,
-    parens: u32,
-    brackets: u32,
     chevrons: u32,
 }
 
 impl ParseArgsState {
     /// Functions that tells you if you are inside or inside of a type.
-    /// If it returns true, the comma means you pass to next argument.
-    /// If it false, you are still inside of a <> or a () or a [].
+    /// - If it returns `true`, the comma means you pass to next argument.
+    /// - If it returns `false`, you are still inside of a `<>`.
+    ///
+    /// # Note
+    /// We can't be inside of `()`, `[]` or `{}` because there are treated as
+    /// groups, so are ignored when parsing the `TokenStream`..
     fn is_unfolded(&self) -> bool {
-        self.brackets == 0 && self.parens == 0 && self.chevrons == 0
+        self.chevrons == 0
     }
 
     fn new() -> Self {
         Self {
             name: true,
-            parens: 0,
-            brackets: 0,
             chevrons: 0,
         }
     }
@@ -68,26 +74,48 @@ fn get_args_names(args: Vec<proc_macro2::TokenTree>) -> Vec<String> {
     for arg in args {
         match arg {
             T::Punct(punct) => match punct.as_char() {
+                // colon found outside of type: switching to type name (end of argument name)
                 ':' if state.is_unfolded() => state.name = false,
+                // comma found outside of type: switch back to argument name (end of type name)
                 ',' if state.is_unfolded() => state.name = true,
+                // comma inside of type name: ignore
                 ',' => (),
+                // chevrons are not considered groups, so we need to do it manually
                 '<' => state.chevrons += 1,
                 '>' => state.chevrons += 1,
-                '(' => state.parens += 1,
-                ')' => state.parens -= 1,
-                '[' => state.brackets += 1,
-                ']' => state.brackets -= 1,
                 '&' => (),
-                x if x.is_alphanumeric() => (),
-                x => panic!("Found the strange character: {x}"),
+                x => panic!("Unsupported character: {x}"),
             },
             T::Ident(ident) if state.name => res.push(ident.to_string()),
             T::Ident(_) => (),
-            T::Group(_) => todo!(),
-            T::Literal(_) => todo!(),
+            // skill all groups ((), |], {})
+            // to see different delimiters, please proc_macro::Group
+            // and NOT proc_macro2::Group (I know T is proc_macro2).
+            //TODO: understand this incoherence
+            T::Group(_) => (),
+            // litterals are static numbers, strings...: not allowed
+            T::Literal(_) => panic!("Found a litteral in a function declaration"),
         }
     }
     res
+}
+
+fn stringify_args_names(args: &Punctuated<FnArg, Comma>) -> String {
+    let token_vec = (&args).into_token_stream().into_iter().collect::<Vec<_>>();
+    get_args_names(token_vec)
+        .into_iter()
+        .next()
+        .unwrap_or_default()
+}
+
+fn get_arg_value(arg: FnArg) -> PatIdent {
+    match arg {
+        syn::FnArg::Typed(PatType { pat, .. }) => match *pat {
+            Pat::Ident(ident) => ident,
+            _ => panic!("wtf??????"),
+        },
+        _ => panic!("wtf????"),
+    }
 }
 
 #[proc_macro_attribute]
@@ -101,26 +129,28 @@ pub fn logger(_attr: TokenStream, func: TokenStream) -> TokenStream {
     let body = func.block;
 
     let name_str = name.to_string();
-    let args_str = args.parse_into_string();
-    let res_str = res_t.parse_into_string();
+    let arg_str = stringify_args_names(&args);
 
-    let args_vec_tok = (&args).into_token_stream().into_iter().collect::<Vec<_>>();
-    dbg!(&args_vec_tok);
-    let args_vec_str = get_args_names(args_vec_tok);
-    dbg!(&args_vec_str);
+    let first_arg_tok = args.first().unwrap().to_owned();
+    let first_arg_ident = get_arg_value(first_arg_tok);
 
     quote!(
         #pub_tok #fn_tok #name(#args) #res_t {
+            let res = #body;
+            let res_str = if (std::any::TypeId::of::<()>() == std::any::TypeId::of::<()>()) {
+                String::from("()")
+            } else {
+                format!("{res:?}")
+            };
+            let arg_value = #first_arg_ident;
             if let Err(er) = fs::OpenOptions::new()
                     .append(true)
                     .open(LOGS_PATH)
-                    .and_then(|mut fd| writeln!(fd, "[{}] {}({}) -> {}", chrono::Local::now(), #name_str, #args_str, #res_str))
+                    .and_then(|mut fd| writeln!(fd, "[{}] {}({} = {:?}) -> {}", chrono::Local::now(), #name_str, #arg_str, arg_value, res_str))
                 {
                     eprint!("Failed to log errors ! ({{er:?}})");
-                }
-            #body
+                };
+            res
             }
-
-    )
-    .into()
+    ).into()
 }

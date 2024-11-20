@@ -12,7 +12,7 @@ use std::io::Write as _;
 const DATA_DIR: &str = "../data/";
 const NOTES_PATH: &str = "../data/notes.json";
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Note {
     content: String,
     id: u32,
