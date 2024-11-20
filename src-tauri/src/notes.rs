@@ -30,7 +30,7 @@ impl Note {
 }
 
 #[tauri::command]
-// #[logger]
+#[logger]
 pub fn create_note() -> u32 {
     let mut notes = get_notes();
     let mut ids = notes.iter().map(|note| note.id);
@@ -44,7 +44,7 @@ pub fn create_note() -> u32 {
 }
 
 #[tauri::command]
-// #[logger]
+#[logger]
 pub fn delete_note(id: u32) {
     write_notes(
         &get_notes()
@@ -55,7 +55,7 @@ pub fn delete_note(id: u32) {
 }
 
 #[tauri::command]
-// #[logger]
+#[logger]
 pub fn get_notes() -> Vec<Note> {
     fs::read_to_string(NOTES_PATH).map_or_else(
         |_| {
@@ -68,7 +68,7 @@ pub fn get_notes() -> Vec<Note> {
     )
 }
 
-// #[logger]
+#[logger]
 pub fn init_notes() {
     #[allow(clippy::create_dir)]
     if !Path::new(DATA_DIR).exists() {
@@ -82,7 +82,7 @@ pub fn init_notes() {
 }
 
 #[tauri::command]
-// #[logger]
+#[logger]
 pub fn update_note(id: u32, title: String, content: String) {
     let mut notes: Vec<Note> = get_notes();
     let mut note = None;

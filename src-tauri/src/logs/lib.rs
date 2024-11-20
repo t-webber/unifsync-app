@@ -131,8 +131,10 @@ pub fn logger(_attr: TokenStream, func: TokenStream) -> TokenStream {
     let name_str = name.to_string();
     let arg_str = stringify_args_names(&args);
 
-    let first_arg_tok = args.first().unwrap().to_owned();
-    let first_arg_ident = get_arg_value(first_arg_tok);
+    let (first_arg_ident, first_arg_default) = args.first().map_or_else(
+        || (None, Some("")),
+        |arg| (Some(get_arg_value(arg.to_owned())), None),
+    );
 
     quote!(
         #pub_tok #fn_tok #name(#args) #res_t {
@@ -142,11 +144,11 @@ pub fn logger(_attr: TokenStream, func: TokenStream) -> TokenStream {
             } else {
                 format!("{res:?}")
             };
-            let arg_value = #first_arg_ident;
+            let arg_value = #first_arg_ident #first_arg_default;
             if let Err(er) = fs::OpenOptions::new()
                     .append(true)
                     .open(LOGS_PATH)
-                    .and_then(|mut fd| writeln!(fd, "[{}] {}({} = {:?}) -> {}", chrono::Local::now(), #name_str, #arg_str, arg_value, res_str))
+                    .and_then(|mut fd| writeln!(fd, "[{:36}] {:20}({} = {:?}) -> {}", chrono::Local::now().to_string(), #name_str, #arg_str, arg_value, res_str))
                 {
                     eprint!("Failed to log errors ! ({{er:?}})");
                 };
