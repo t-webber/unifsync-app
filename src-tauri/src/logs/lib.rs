@@ -9,6 +9,7 @@
     clippy::nursery,
     // clippy::cargo
 )]
+//
 #![allow(clippy::blanket_clippy_restriction_lints)]
 #![allow(clippy::implicit_return)]
 #![allow(clippy::single_call_fn)]
@@ -24,24 +25,16 @@
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{
-    parse, punctuated::Punctuated, token::Comma, FnArg, Ident, ItemFn, Pat, PatIdent, PatType,
-};
+use syn::{parse, punctuated::Punctuated, token::Comma, FnArg, ItemFn, Pat, PatIdent, PatType};
 
-#[allow(dead_code)]
-trait ParseIntoString {
-    fn parse_into_string(&self) -> String;
-}
-
-impl<T: ToTokens + Clone> ParseIntoString for T {
-    fn parse_into_string(&self) -> String {
-        let tokens: TokenStream = self.into_token_stream().into();
-        parse::<Ident>(tokens).map_or_else(|_| String::from(" ? "), |parsed| parsed.to_string())
-    }
-}
-
+/// This is the state struct to parse arguments lists, i.e., a `TokenStream` of stringified
+/// version `soµe_args: &u32, blob: Vec<&[String]>`, to get only the names of the arguments.
 struct ParseArgsState {
+    /// Equals true iff the cursor is reading a name, false if it reading a type.
     name: bool,
+    /// Number of unclosed chevrons at the position of the cursor.
+    /// All other groups, `()`, `[]` or `{}`, are treated as group token items so we won't
+    /// need to study them here.
     chevrons: u32,
 }
 
@@ -66,7 +59,7 @@ impl ParseArgsState {
 }
 
 /// Transforms a TokenStream that is a vec of arguments of a function
-/// into a vec of strings, with only the names of the arguments.
+/// into a `Vec<String>`, with only the names of the arguments.
 fn get_args_names(args: Vec<proc_macro2::TokenTree>) -> Vec<String> {
     use proc_macro2::TokenTree as T;
     let mut res = vec![];
@@ -88,9 +81,9 @@ fn get_args_names(args: Vec<proc_macro2::TokenTree>) -> Vec<String> {
             },
             T::Ident(ident) if state.name => res.push(ident.to_string()),
             T::Ident(_) => (),
-            // skill all groups ((), |], {})
+            // skill all groups (`()`, `|]`, `{}`)
             // to see different delimiters, please proc_macro::Group
-            // and NOT proc_macro2::Group (I know T is proc_macro2).
+            // and NOT `proc_macro2::Group` (I know `T` is `proc_macro2`).
             //TODO: understand this incoherence
             T::Group(_) => (),
             // litterals are static numbers, strings...: not allowed
@@ -100,7 +93,11 @@ fn get_args_names(args: Vec<proc_macro2::TokenTree>) -> Vec<String> {
     res
 }
 
-fn stringify_args_names(args: &Punctuated<FnArg, Comma>) -> String {
+/// Type of the tokens for the arguments of a function.
+type Args = Punctuated<FnArg, Comma>;
+
+#[allow(dead_code)]
+fn stringify_args_names(args: &Args) -> String {
     let token_vec = (&args).into_token_stream().into_iter().collect::<Vec<_>>();
     get_args_names(token_vec)
         .into_iter()
@@ -108,6 +105,7 @@ fn stringify_args_names(args: &Punctuated<FnArg, Comma>) -> String {
         .unwrap_or_default()
 }
 
+/// Transform a argument to it's identifier, to be evaluated in `quote!`.
 fn get_arg_value(arg: FnArg) -> PatIdent {
     match arg {
         syn::FnArg::Typed(PatType { pat, .. }) => match *pat {
@@ -118,37 +116,41 @@ fn get_arg_value(arg: FnArg) -> PatIdent {
     }
 }
 
+fn get_args_values(args: &Args) -> Vec<proc_macro2::TokenStream> {
+    args.to_owned()
+        .into_iter()
+        .map(get_arg_value)
+        .map(|ident| quote!(format!("{:?}", #ident.clone())))
+        .collect()
+}
+
+/// Main logger function that is used as procedural macro attribute on the notes API functions.
 #[proc_macro_attribute]
 pub fn logger(_attr: TokenStream, func: TokenStream) -> TokenStream {
     let func = parse::<ItemFn>(func).unwrap();
-    let pub_tok = func.vis; // pub or empty
-    let fn_tok = func.sig.fn_token;
+    let pub_tok = func.vis; // `pub` or empty
+    let fn_tok = func.sig.fn_token; // `fn` or empty
     let name = func.sig.ident; // name
-    let args = func.sig.inputs; // args lsit
-    let res_t = func.sig.output; // return
-    let body = func.block;
+    let args = func.sig.inputs; // list of arguments
+    let res_t = func.sig.output; // return type
+    let body = func.block; // body
 
+    let args_ident: Vec<proc_macro2::TokenStream> = get_args_values(&args);
     let name_str = name.to_string();
-    let arg_str = stringify_args_names(&args);
-
-    let (first_arg_ident, first_arg_default) = args.first().map_or_else(
-        || (None, Some("")),
-        |arg| (Some(get_arg_value(arg.to_owned())), None),
-    );
 
     quote!(
         #pub_tok #fn_tok #name(#args) #res_t {
+            let arg_value: Vec<String> = vec![#(#args_ident),*];
             let res = #body;
             let res_str = if (std::any::TypeId::of::<()>() == std::any::TypeId::of::<()>()) {
                 String::from("()")
             } else {
                 format!("{res:?}")
             };
-            let arg_value = #first_arg_ident #first_arg_default;
             if let Err(er) = fs::OpenOptions::new()
                     .append(true)
                     .open(LOGS_PATH)
-                    .and_then(|mut fd| writeln!(fd, "[{:36}] {:20}({} = {:?}) -> {}", chrono::Local::now().to_string(), #name_str, #arg_str, arg_value, res_str))
+                    .and_then(|mut fd| writeln!(fd, "[{:36}] {:20}({:?}) -> {}", chrono::Local::now().to_string(), #name_str, arg_value.join(", "), res_str))
                 {
                     eprint!("Failed to log errors ! ({{er:?}})");
                 };

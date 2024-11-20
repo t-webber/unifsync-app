@@ -74,7 +74,9 @@ pub fn init_notes() {
     if !Path::new(DATA_DIR).exists() {
         fs::create_dir(DATA_DIR).eprint("Failed to create data folder");
     }
+    println!("Running init");
     if !Path::new(NOTES_PATH).exists() {
+        println!("Creating file");
         fs::write(NOTES_PATH, "").eprint("Failed to create data file");
     }
     #[cfg(feature = "logs")]
