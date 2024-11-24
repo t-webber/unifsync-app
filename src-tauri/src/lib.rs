@@ -25,6 +25,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::ref_patterns)]
 
+mod env;
 mod errors;
 extern crate logs;
 mod notes;

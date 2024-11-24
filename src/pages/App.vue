@@ -53,7 +53,7 @@ initNotes()
 
 <template>
     <div class="flex h-screen">
-        <header class="bg-muted space-y-4 pt-4 h-full">
+        <header class="bg-muted space-y-4 pt-4 h-full" :key="state">
             <h1 class="pt-4 px-4 w-full text-2xl text-center" v-if="state.open">
                 UnifSync
             </h1>
@@ -149,7 +149,7 @@ initNotes()
                 </Button>
             </nav>
         </header>
-        <main class="p-4 w-full">
+        <main class="p-4 w-full" :key="state">
             <div v-if="state.loading">
                 <p>Loading</p>
             </div>

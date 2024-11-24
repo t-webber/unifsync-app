@@ -1,16 +1,9 @@
-use std::{fs, path::Path};
-
+use crate::env::{DATA_DIR, LOGS_PATH, NOTES_PATH, NOTES_STATE};
 use crate::errors::Eprintln as _; // anonymous import
-#[cfg(feature = "logs")]
-use crate::errors::LOGS_PATH;
-
 use logs::logger;
 use serde::{Deserialize, Serialize};
-
 use std::io::Write as _;
-
-const DATA_DIR: &str = "../data/";
-const NOTES_PATH: &str = "../data/notes.json";
+use std::{fs, path::Path};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Note {
@@ -68,19 +61,14 @@ pub fn get_notes() -> Vec<Note> {
     )
 }
 
-#[logger]
 pub fn init_notes() {
     #[allow(clippy::create_dir)]
     if !Path::new(DATA_DIR).exists() {
         fs::create_dir(DATA_DIR).eprint("Failed to create data folder");
     }
-    println!("Running init");
     if !Path::new(NOTES_PATH).exists() {
-        println!("Creating file");
-        fs::write(NOTES_PATH, "").eprint("Failed to create data file");
+        fs::write(NOTES_PATH, "[]").eprint("Failed to create data file");
     }
-    #[cfg(feature = "logs")]
-    fs::write(LOGS_PATH, "").eprint("Failed to create logs file"); // always wipe logs
 }
 
 #[tauri::command]
@@ -102,7 +90,7 @@ pub fn update_note(id: u32, title: String, content: String) {
     };
 }
 
-#[logger]
+#[logger(true)]
 fn write_notes(notes: &Vec<Note>) {
     serde_json::to_string(&notes)
         .map_err(|er| er.to_string())

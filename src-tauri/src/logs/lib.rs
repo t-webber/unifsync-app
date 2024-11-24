@@ -22,10 +22,13 @@
 #![allow(clippy::ref_patterns)]
 //
 #![feature(if_let_guard)]
+#![feature(let_chains)]
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse, punctuated::Punctuated, token::Comma, FnArg, ItemFn, Pat, PatIdent, PatType};
+use syn::{
+    parse, punctuated::Punctuated, token::Comma, FnArg, ItemFn, LitBool, Pat, PatIdent, PatType,
+};
 
 /// This is the state struct to parse arguments lists, i.e., a `TokenStream` of stringified
 /// version `soµe_args: &u32, blob: Vec<&[String]>`, to get only the names of the arguments.
@@ -124,9 +127,7 @@ fn get_args_values(args: &Args) -> Vec<proc_macro2::TokenStream> {
         .collect()
 }
 
-/// Main logger function that is used as procedural macro attribute on the notes API functions.
-#[proc_macro_attribute]
-pub fn logger(_attr: TokenStream, func: TokenStream) -> TokenStream {
+fn log_to_file(func: TokenStream) -> TokenStream {
     let func = parse::<ItemFn>(func).unwrap();
     let pub_tok = func.vis; // `pub` or empty
     let fn_tok = func.sig.fn_token; // `fn` or empty
@@ -149,12 +150,59 @@ pub fn logger(_attr: TokenStream, func: TokenStream) -> TokenStream {
             };
             if let Err(er) = fs::OpenOptions::new()
                     .append(true)
+                    .create(true)
                     .open(LOGS_PATH)
                     .and_then(|mut fd| writeln!(fd, "[{:36}] {:20}({:?}) -> {}", chrono::Local::now().to_string(), #name_str, arg_value.join(", "), res_str))
                 {
-                    eprint!("Failed to log errors ! ({{er:?}})");
+                    eprintln!("Failed to log errors in {LOGS_PATH} ! ({er:?})");
                 };
             res
             }
     ).into()
+}
+
+fn notes_state(func: TokenStream) -> TokenStream {
+    let func = parse::<ItemFn>(func).unwrap();
+    let pub_tok = func.vis; // `pub` or empty
+    let fn_tok = func.sig.fn_token; // `fn` or empty
+    let name = func.sig.ident; // name
+    let args = func.sig.inputs; // list of arguments
+    let res_t = func.sig.output; // return type
+    let body = func.block; // body
+
+    let args_ident: Vec<proc_macro2::TokenStream> = get_args_values(&args);
+    let name_str = name.to_string();
+
+    quote!(
+        #pub_tok #fn_tok #name(#args) #res_t {
+            let arg_value: Vec<String> = vec![#(#args_ident),*];
+            let res = #body;
+            let res_str = if (std::any::TypeId::of::<()>() == std::any::TypeId::of::<()>()) {
+                String::from("()")
+            } else {
+                format!("{res:?}")
+            };
+            if let Err(er) = fs::OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(NOTES_STATE)
+                    .and_then(|mut fd| writeln!(fd, "[{:36}] {:20}({:?}) -> {}", chrono::Local::now().to_string(), #name_str, arg_value.join(", "), res_str))
+                {
+                    eprint!("Failed to log errors in {NOTES_STATE} ! ({{er:?}})");
+                };
+            res
+            }
+    ).into()
+}
+
+/// Main logger function that is used as procedural macro attribute on the notes API functions.
+#[proc_macro_attribute]
+pub fn logger(attr: TokenStream, func: TokenStream) -> TokenStream {
+    if let Ok(LitBool { value, .. }) = parse::<LitBool>(attr)
+        && value
+    {
+        notes_state(func)
+    } else {
+        log_to_file(func)
+    }
 }

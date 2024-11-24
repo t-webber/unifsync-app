@@ -1,3 +1,4 @@
+use crate::env::LOGS_PATH;
 use core::fmt::Debug as fDbg;
 use std::fs;
 use std::io::Write as _;
@@ -10,9 +11,6 @@ macro_rules! eprint_other {
         }
     };
 }
-
-#[cfg(feature = "logs")]
-pub const LOGS_PATH: &str = "../data/logs.txt";
 
 pub trait Eprintln<T> {
     fn eprint(&self, msg: &str);
@@ -40,7 +38,7 @@ impl<T, E: fDbg> Eprintln<T> for Result<T, E> {
                 .open(LOGS_PATH)
                 .and_then(|mut fd| writeln!(fd, "{msg}: {err:?}"))
             {
-                eprint!("Failed to log errors ! ({er:?})");
+                eprint!("Failed to log errors in {LOGS_PATH} ! ({er:?})");
             }
         }
     }
